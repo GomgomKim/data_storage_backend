@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gomgom.data_storage.data.mapper.SaveDataMapper">
+    <resultMap id="BaseResultMap" type="com.gomgom.data_storage.data.model.SaveData">
+        <id column="IDX" jdbcType="INTEGER" property="idx" />
+        <result column="ID" jdbcType="VARCHAR" property="id" />
+        <result column="FIRSTNAME" jdbcType="VARCHAR" property="firstname" />
+        <result column="LASTNAME" jdbcType="VARCHAR" property="lastname" />
+        <result column="EMAIL" jdbcType="VARCHAR" property="email" />
+    </resultMap>
+    <sql id="Base_Column_List">
+        IDX, ID, FIRSTNAME, LASTNAME, EMAIL
+    </sql>
+    <insert id="insert" parameterType="com.gomgom.data_storage.data.model.SaveData">
+        insert into dataset (IDX, ID, FIRSTNAME, LASTNAME, EMAIL)
+        values (#{idx,jdbcType=INTEGER}, #{id,jdbcType=VARCHAR}, #{firstname,jdbcType=VARCHAR},
+        #{lastname,jdbcType=VARCHAR}, #{email,jdbcType=VARCHAR})
+    </insert>
+    <insert id="insertSelective" parameterType="com.gomgom.data_storage.data.model.SaveData">
+        insert into dataset
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="idx != null">
+                IDX,
+            </if>
+            <if test="id != null">
+                ID,
+            </if>
+            <if test="firstname != null">
+                FIRSTNAME,
+            </if>
+            <if test="lastname != null">
+                LASTNAME,
+            </if>
+            <if test="email != null">
+                EMAIL,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="idx != null">
+                #{idx,jdbcType=INTEGER},
+            </if>
+            <if test="id != null">
+                #{id,jdbcType=VARCHAR},
+            </if>
+            <if test="firstname != null">
+                #{firstname,jdbcType=VARCHAR},
+            </if>
+            <if test="lastname != null">
+                #{lastname,jdbcType=VARCHAR},
+            </if>
+            <if test="email != null">
+                #{email,jdbcType=VARCHAR},
+            </if>
+        </trim>
+    </insert>
+</mapper>
