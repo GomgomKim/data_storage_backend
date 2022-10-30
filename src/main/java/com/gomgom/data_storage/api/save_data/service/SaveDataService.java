@@ -1,6 +1,7 @@
 package com.gomgom.data_storage.api.save_data.service;
 
-import com.gomgom.data_storage.api.save_data.model.SaveDataCreateRequest;
+import com.gomgom.data_storage.api.save_data.model.SaveDataCreateRequestCsv;
+import com.gomgom.data_storage.api.save_data.model.SaveDataCreateRequestString;
 import com.gomgom.data_storage.api.save_data.model.SaveDataCreateResult;
 import com.gomgom.data_storage.data.mapper.SaveDataMapper;
 import com.gomgom.data_storage.data.model.SaveData;
@@ -16,13 +17,29 @@ public class SaveDataService {
     SaveDataMapper saveDataMapper;
 
     @Transactional
-    public SaveDataCreateResult createSaveData(SaveDataCreateRequest request) throws Exception {
-        SaveData SaveData = new SaveData();
+    public SaveDataCreateResult createSaveDataString(SaveDataCreateRequestString request) throws Exception {
+        SaveData saveData = new SaveData();
+        saveData.setId(request.getId());
+        saveData.setFirstname(request.getFirstname());
+        saveData.setLastname(request.getLastname());
+        saveData.setEmail(request.getEmail());
 
-        log.debug("request :" + request);
+        log.info("gomgom request :" + request);
 
-        SaveDataCreateResult result = saveDataMapper.insertSelective(SaveData) > 0 ? SaveDataCreateResult.SUCCESS : SaveDataCreateResult.FAIL;
+        SaveDataCreateResult result = saveDataMapper.insertSelective(saveData) > 0 ? SaveDataCreateResult.SUCCESS : SaveDataCreateResult.FAIL;
+        log.info("gomgom result :" + result);
 
+        return result;
+    }
+
+    public SaveDataCreateResult createSaveDataCsv(SaveDataCreateRequestCsv request) throws Exception {
+//        SaveData saveData = new SaveData();
+
+        log.info("gomgom request :" + request);
+
+//        SaveDataCreateResult result = saveDataMapper.insertSelective(saveData) > 0 ? SaveDataCreateResult.SUCCESS : SaveDataCreateResult.FAIL;
+        SaveDataCreateResult result = SaveDataCreateResult.SUCCESS;
+        log.info("gomgom result :" + result);
         return result;
     }
 }
