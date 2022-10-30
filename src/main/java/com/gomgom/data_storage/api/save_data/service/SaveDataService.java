@@ -19,9 +19,9 @@ public class SaveDataService {
     public SaveDataCreateResult createSaveData(SaveDataCreateRequest request) throws Exception {
         SaveData SaveData = new SaveData();
 
-        SaveDataCreateResult result = saveDataMapper.insertSelective(SaveData) > 0 ? SaveDataCreateResult.SUCCESS : SaveDataCreateResult.FAIL;
+        log.debug("request :" + request);
 
-        log.debug("insert key=" + SaveData.getIdx());
+        SaveDataCreateResult result = saveDataMapper.insertSelective(SaveData) > 0 ? SaveDataCreateResult.SUCCESS : SaveDataCreateResult.FAIL;
 
         return result;
     }
