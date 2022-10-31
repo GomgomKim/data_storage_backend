@@ -4,7 +4,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 @Data
-public class SaveData {
+public class SaveDataString {
     // PK
     private Integer idx;
 
