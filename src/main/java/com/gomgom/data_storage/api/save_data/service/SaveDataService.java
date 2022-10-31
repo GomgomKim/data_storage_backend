@@ -2,6 +2,7 @@ package com.gomgom.data_storage.api.save_data.service;
 
 import com.gomgom.data_storage.api.save_data.model.SaveDataCreateRequestString;
 import com.gomgom.data_storage.api.save_data.model.SaveDataCreateResult;
+import com.gomgom.data_storage.common.util.CsvFileParseUtil;
 import com.gomgom.data_storage.data.mapper.SaveDataMapper;
 import com.gomgom.data_storage.data.model.SaveDataString;
 import lombok.extern.slf4j.Slf4j;
@@ -9,6 +10,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -33,26 +37,38 @@ public class SaveDataService {
     }
 
     public SaveDataCreateResult createSaveDataCsv(MultipartFile[] files) throws Exception {
-        log.debug("gomgom files", files);
-        System.out.println(files);
         for(MultipartFile file : files) {
             String fileName = file.getOriginalFilename();
-//            String fileNameExtension = FilenameUtils.getExtension(fileName).toLowerCase();
-            System.out.println(fileName);
+            List<String> fileHeader = getHeaderInCsvFile(file);
+            List<List<String>> fileBody = getBodyInCsvFile(file);
+//            System.out.println(fileBody);
+//            System.out.println(fileName);
+            System.out.println(fileHeader);
+            System.out.println(fileHeader.indexOf("id"));
+            System.out.println(fileHeader.indexOf("firstname"));
+            System.out.println(fileHeader.indexOf("lastname"));
+            System.out.println(fileHeader.indexOf("email"));
         }
-//
-//        UploadFile record = new UploadFile();
-//        record.setName(fileName);
-//        record.setFilePath(filePath + "/"+ folderPath+"/"+ randomName + "." + fileNameExtension);
-//        log.debug("######## filePath : {}", record.getFilePath());
-//        uploadFileMapper.insertSelective(record);
-//
-//        UploadFileResponse response = new UploadFileResponse();
-//        response.setResult(true);
-//        response.setIdx(record.getIdx());
-//        response.setFilename(fileName);
 
         return SaveDataCreateResult.SUCCESS;
+    }
+
+    private List<String> getHeaderInCsvFile(MultipartFile file) {
+        try {
+            return new CsvFileParseUtil().getHeader(file.getInputStream());
+        } catch (IOException e) {
+            log.error("CSV file header parsing error : ", e);
+            throw new IllegalArgumentException();
+        }
+    }
+
+    private List<List<String>> getBodyInCsvFile(MultipartFile file) {
+        try {
+            return new CsvFileParseUtil().getBody(file.getInputStream());
+        } catch (IOException e) {
+            log.error("CSV file body parsing error : ", e);
+            throw new IllegalArgumentException();
+        }
     }
 
 }

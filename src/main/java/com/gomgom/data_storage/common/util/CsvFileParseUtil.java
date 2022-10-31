@@ -61,7 +61,7 @@ public class CsvFileParseUtil {
     public List<List<String>> getBody(InputStream stream) throws IOException {
         List<String[]> results = parse(stream);
         List<List<String>> body = new ArrayList<>(new ArrayList<>());
-
+        System.out.println("results: " +results);
         for (String[] row : results.subList(START_INDEX, results.size())) {
             int startIndexWithoutSpace = getNumberOfSpaceInPrefix(row);
             int endIndexWithoutSpace = row.length - getNumberOfSpaceInSuffix(row);
@@ -81,6 +81,7 @@ public class CsvFileParseUtil {
                 results.add(nextLine);
             }
         }
+        System.out.println("results 2: " +results);
 
         return results;
     }
