@@ -37,20 +37,31 @@ public class SaveDataService {
     }
 
     public SaveDataCreateResult createSaveDataCsv(MultipartFile[] files) throws Exception {
+        SaveDataCreateResult result = SaveDataCreateResult.FAIL;
+
         for(MultipartFile file : files) {
             String fileName = file.getOriginalFilename();
             List<String> fileHeader = getHeaderInCsvFile(file);
             List<List<String>> fileBody = getBodyInCsvFile(file);
 //            System.out.println(fileBody);
 //            System.out.println(fileName);
-            System.out.println(fileHeader);
-            System.out.println(fileHeader.indexOf("id"));
-            System.out.println(fileHeader.indexOf("firstname"));
-            System.out.println(fileHeader.indexOf("lastname"));
-            System.out.println(fileHeader.indexOf("email"));
-        }
+//            System.out.println(fileHeader);
+            int idIdx = fileHeader.indexOf("id");
+            int firstnameIdx = fileHeader.indexOf("firstname");
+            int lastnameIDx = fileHeader.indexOf("lastname");
+            int emailIDx = fileHeader.indexOf("email");
 
-        return SaveDataCreateResult.SUCCESS;
+            for(List<String> body : fileBody) {
+                SaveDataString saveData = new SaveDataString();
+                saveData.setId(body.get(idIdx));
+                saveData.setFirstname(body.get(firstnameIdx));
+                saveData.setLastname(body.get(lastnameIDx));
+                saveData.setEmail(body.get(emailIDx));
+                result = saveDataMapper.insertSelective(saveData) > 0 ? SaveDataCreateResult.SUCCESS : SaveDataCreateResult.FAIL;
+                if(result == SaveDataCreateResult.FAIL) break;
+            }
+        }
+        return result;
     }
 
     private List<String> getHeaderInCsvFile(MultipartFile file) {
