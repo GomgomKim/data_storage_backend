@@ -12,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 @Slf4j
@@ -40,26 +42,22 @@ public class SaveDataService {
         SaveDataCreateResult result = SaveDataCreateResult.FAIL;
 
         for(MultipartFile file : files) {
-            String fileName = file.getOriginalFilename();
+//            String fileName = file.getOriginalFilename();
             List<String> fileHeader = getHeaderInCsvFile(file);
             List<List<String>> fileBody = getBodyInCsvFile(file);
-//            System.out.println(fileBody);
-//            System.out.println(fileName);
-//            System.out.println(fileHeader);
-            int idIdx = fileHeader.indexOf("id");
-            int firstnameIdx = fileHeader.indexOf("firstname");
-            int lastnameIDx = fileHeader.indexOf("lastname");
-            int emailIDx = fileHeader.indexOf("email");
 
-            for(List<String> body : fileBody) {
-                SaveDataString saveData = new SaveDataString();
-                saveData.setId(body.get(idIdx));
-                saveData.setFirstname(body.get(firstnameIdx));
-                saveData.setLastname(body.get(lastnameIDx));
-                saveData.setEmail(body.get(emailIDx));
-                result = saveDataMapper.insertSelective(saveData) > 0 ? SaveDataCreateResult.SUCCESS : SaveDataCreateResult.FAIL;
-                if(result == SaveDataCreateResult.FAIL) break;
-            }
+            long beforeTime = System.currentTimeMillis();
+
+            HashMap<String, List<HashMap<String ,String>>> dataParam = makeQueryParamData(fileHeader, fileBody);
+            dataParam.get("multiData").remove(0);
+            System.out.println("data : "+dataParam.get("multiData").get(0));
+            System.out.println("data : "+dataParam.get("multiData").get(1));
+            System.out.println("data : "+dataParam.get("multiData").get(2));
+            System.out.println("data : "+dataParam.get("multiData").get(3));
+            result = saveDataMapper.insertMultiRow(dataParam) > 0 ? SaveDataCreateResult.SUCCESS : SaveDataCreateResult.FAIL;
+            long afterTime = System.currentTimeMillis();
+            long secDiffTime = (afterTime - beforeTime)/1000;
+            System.out.println("Insert 시간 (s) : "+secDiffTime);
         }
         return result;
     }
@@ -82,4 +80,25 @@ public class SaveDataService {
         }
     }
 
+    private HashMap<String, List<HashMap<String ,String>>> makeQueryParamData(List<String> fileHeader, List<List<String>> fileBody) {
+        int idIdx = fileHeader.indexOf("id");
+        int firstnameIdx = fileHeader.indexOf("firstname");
+        int lastnameIDx = fileHeader.indexOf("lastname");
+        int emailIDx = fileHeader.indexOf("email");
+
+        HashMap<String, List<HashMap<String ,String>>> dataParam = new HashMap<>();
+        List<HashMap<String ,String>> multiData = new ArrayList<>();
+        for(List<String> body : fileBody) {
+            HashMap<String, String> saveData = new HashMap<>();
+            saveData.put("id", body.get(idIdx));
+            saveData.put("firstname", body.get(firstnameIdx));
+            saveData.put("lastname", body.get(lastnameIDx));
+            saveData.put("email", body.get(emailIDx));
+            multiData.add(saveData);
+        }
+
+        dataParam.put("multiData", multiData);
+
+        return dataParam;
+    }
 }

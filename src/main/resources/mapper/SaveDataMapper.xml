@@ -53,4 +53,20 @@
             </if>
         </trim>
     </insert>
+
+    <insert id="insertMultiRow" parameterType="java.util.Map">
+        insert into dataset
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            ID, FIRSTNAME, LASTNAME, EMAIL
+        </trim>
+        values
+        <foreach collection="multiData" item="item" separator=",">
+            <trim prefix="(" suffix=")">
+                #{item.id,jdbcType=VARCHAR},
+                #{item.firstname,jdbcType=VARCHAR},
+                #{item.lastname,jdbcType=VARCHAR},
+                #{item.email,jdbcType=VARCHAR}
+            </trim>
+        </foreach>
+    </insert>
 </mapper>

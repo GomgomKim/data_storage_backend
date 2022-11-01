@@ -31,6 +31,7 @@ dependencies {
 	implementation group: 'io.springfox', name: 'springfox-boot-starter', version: '3.0.0'
 	implementation group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
 	implementation group: 'com.opencsv', name: 'opencsv', version: '4.4'
+	implementation group: 'org.bgee.log4jdbc-log4j2', name:'log4jdbc-log4j2-jdbc4.1', version: '1.16'
 }
 
 tasks.named('test') {
