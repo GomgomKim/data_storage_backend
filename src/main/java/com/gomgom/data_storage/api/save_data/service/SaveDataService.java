@@ -10,17 +10,24 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
 public class SaveDataService {
     @Autowired
     SaveDataMapper saveDataMapper;
+
+    private static final Map<String, SseEmitter> CLIENTS = new ConcurrentHashMap<>();
+    SseEmitter emitter;
+    String userId;
 
     @Transactional
     public SaveDataCreateResult createSaveDataString(SaveDataCreateRequestString request) throws Exception {
@@ -43,12 +50,29 @@ public class SaveDataService {
             long beforeTime = System.currentTimeMillis();
 
             List<List<HashMap<String ,String>>> dataParams = makeQueryParamData(fileHeader, fileBody);
+            int wholeSize = dataParams.size();
+            int uploadCnt = 0;
             for (List<HashMap<String ,String>> dataParam : dataParams) {
+                uploadCnt ++;
                 HashMap<String, List<HashMap<String ,String>>> param = new HashMap<>();
                 param.put("multiData", dataParam);
                 result = saveDataMapper.insertMultiRow(param) > 0 ? SaveDataCreateResult.SUCCESS : SaveDataCreateResult.FAIL;
                 if (result == SaveDataCreateResult.FAIL) {
                     break;
+                }
+                System.out.println("print 0 "+uploadCnt+"    "+wholeSize);
+
+                System.out.println("print 1 "+(uploadCnt * 100) / wholeSize);
+                Object uploadStatus = (uploadCnt * 100) / wholeSize;
+                System.out.println("print 2 "+uploadStatus);
+
+                try {
+                    CLIENTS.get(userId).send(SseEmitter.event()
+                            .id(userId)
+                            .name("sse")
+                            .data(uploadStatus));
+                } catch (IOException exception) {
+                    throw new RuntimeException("연결 오류!");
                 }
             }
 
@@ -57,6 +81,27 @@ public class SaveDataService {
             System.out.println("Insert 시간 (s) : " + secDiffTime);
         }
         return result;
+    }
+
+    public SseEmitter getUploadStatus(String id) {
+        System.out.println("connect id"+ id);
+        emitter = new SseEmitter();
+        CLIENTS.put(id, emitter);
+        userId = id;
+
+        emitter.onTimeout(() -> CLIENTS.remove(id));
+        emitter.onCompletion(() -> CLIENTS.remove(id));
+        Object data = "EventStream Created.";
+        try {
+            emitter.send(SseEmitter.event()
+                    .id(id)
+                    .name("sse")
+                    .data(data));
+        } catch (IOException exception) {
+            throw new RuntimeException("연결 오류!");
+        }
+
+        return emitter;
     }
 
     private List<String> getHeaderInCsvFile(MultipartFile file) {
