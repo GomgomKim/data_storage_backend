@@ -29,35 +29,32 @@ public class SaveDataService {
         saveData.setFirstname(request.getFirstname());
         saveData.setLastname(request.getLastname());
         saveData.setEmail(request.getEmail());
-
-        log.debug("gomgom request :" + request);
-
         SaveDataCreateResult result = saveDataMapper.insertSelective(saveData) > 0 ? SaveDataCreateResult.SUCCESS : SaveDataCreateResult.FAIL;
-        log.debug("gomgom result :" + result);
-
         return result;
     }
 
     public SaveDataCreateResult createSaveDataCsv(MultipartFile[] files) throws Exception {
         SaveDataCreateResult result = SaveDataCreateResult.FAIL;
 
-        for(MultipartFile file : files) {
-//            String fileName = file.getOriginalFilename();
+        for (MultipartFile file : files) {
             List<String> fileHeader = getHeaderInCsvFile(file);
             List<List<String>> fileBody = getBodyInCsvFile(file);
 
             long beforeTime = System.currentTimeMillis();
 
-            HashMap<String, List<HashMap<String ,String>>> dataParam = makeQueryParamData(fileHeader, fileBody);
-            dataParam.get("multiData").remove(0);
-            System.out.println("data : "+dataParam.get("multiData").get(0));
-            System.out.println("data : "+dataParam.get("multiData").get(1));
-            System.out.println("data : "+dataParam.get("multiData").get(2));
-            System.out.println("data : "+dataParam.get("multiData").get(3));
-            result = saveDataMapper.insertMultiRow(dataParam) > 0 ? SaveDataCreateResult.SUCCESS : SaveDataCreateResult.FAIL;
+            List<List<HashMap<String ,String>>> dataParams = makeQueryParamData(fileHeader, fileBody);
+            for (List<HashMap<String ,String>> dataParam : dataParams) {
+                HashMap<String, List<HashMap<String ,String>>> param = new HashMap<>();
+                param.put("multiData", dataParam);
+                result = saveDataMapper.insertMultiRow(param) > 0 ? SaveDataCreateResult.SUCCESS : SaveDataCreateResult.FAIL;
+                if (result == SaveDataCreateResult.FAIL) {
+                    break;
+                }
+            }
+
             long afterTime = System.currentTimeMillis();
             long secDiffTime = (afterTime - beforeTime)/1000;
-            System.out.println("Insert 시간 (s) : "+secDiffTime);
+            System.out.println("Insert 시간 (s) : " + secDiffTime);
         }
         return result;
     }
@@ -80,24 +77,30 @@ public class SaveDataService {
         }
     }
 
-    private HashMap<String, List<HashMap<String ,String>>> makeQueryParamData(List<String> fileHeader, List<List<String>> fileBody) {
+    private List<List<HashMap<String ,String>>> makeQueryParamData(List<String> fileHeader, List<List<String>> fileBody) {
         int idIdx = fileHeader.indexOf("id");
         int firstnameIdx = fileHeader.indexOf("firstname");
         int lastnameIDx = fileHeader.indexOf("lastname");
         int emailIDx = fileHeader.indexOf("email");
 
-        HashMap<String, List<HashMap<String ,String>>> dataParam = new HashMap<>();
+        List<List<HashMap<String ,String>>> dataParam = new ArrayList<>();
         List<HashMap<String ,String>> multiData = new ArrayList<>();
+
+        int batchCnt = -1;
         for(List<String> body : fileBody) {
+            batchCnt ++;
+            if (batchCnt == 0) continue;
             HashMap<String, String> saveData = new HashMap<>();
             saveData.put("id", body.get(idIdx));
             saveData.put("firstname", body.get(firstnameIdx));
             saveData.put("lastname", body.get(lastnameIDx));
             saveData.put("email", body.get(emailIDx));
             multiData.add(saveData);
+            if (batchCnt % 10000 == 0) {
+                dataParam.add(multiData);
+                multiData = new ArrayList<>();
+            }
         }
-
-        dataParam.put("multiData", multiData);
 
         return dataParam;
     }
