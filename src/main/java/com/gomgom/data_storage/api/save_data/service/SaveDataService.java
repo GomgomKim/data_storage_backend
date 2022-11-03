@@ -40,6 +40,7 @@ public class SaveDataService {
         return result;
     }
 
+    @Transactional
     public SaveDataCreateResult createSaveDataCsv(MultipartFile[] files) throws Exception {
         SaveDataCreateResult result = SaveDataCreateResult.FAIL;
 
@@ -60,20 +61,18 @@ public class SaveDataService {
                 if (result == SaveDataCreateResult.FAIL) {
                     break;
                 }
-                System.out.println("print 0 "+uploadCnt+"    "+wholeSize);
 
-                System.out.println("print 1 "+(uploadCnt * 100) / wholeSize);
-                Object uploadStatus = (uploadCnt * 100) / wholeSize;
-                System.out.println("print 2 "+uploadStatus);
-
-                try {
-                    CLIENTS.get(userId).send(SseEmitter.event()
-                            .id(userId)
-                            .name("sse")
-                            .data(uploadStatus));
-                } catch (IOException exception) {
-                    throw new RuntimeException("연결 오류!");
-                }
+                // SSE - 사용안함
+//                Object uploadStatus = (uploadCnt * 100) / wholeSize;
+//                System.out.println("user : "+userId);
+//                try {
+//                    CLIENTS.get(userId).send(SseEmitter.event()
+//                            .id(userId)
+//                            .name("sse")
+//                            .data(uploadStatus));
+//                } catch (IOException exception) {
+//                    throw new RuntimeException("연결 오류!");
+//                }
             }
 
             long afterTime = System.currentTimeMillis();
@@ -83,23 +82,16 @@ public class SaveDataService {
         return result;
     }
 
+
+
     public SseEmitter getUploadStatus(String id) {
-        System.out.println("connect id"+ id);
+        System.out.println(id);
         emitter = new SseEmitter();
         CLIENTS.put(id, emitter);
         userId = id;
 
         emitter.onTimeout(() -> CLIENTS.remove(id));
         emitter.onCompletion(() -> CLIENTS.remove(id));
-        Object data = "EventStream Created.";
-        try {
-            emitter.send(SseEmitter.event()
-                    .id(id)
-                    .name("sse")
-                    .data(data));
-        } catch (IOException exception) {
-            throw new RuntimeException("연결 오류!");
-        }
 
         return emitter;
     }
